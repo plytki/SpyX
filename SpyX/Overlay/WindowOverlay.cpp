@@ -104,8 +104,8 @@ bool CWindowOverlay::BindToWindow(HWND TargetWindow)
 
     IDXGIFactory2 *Factory = nullptr;
     IDXGIDevice *DxgiDevice = nullptr;
-    HRESULT Hr = MContext->GetDevice()->QueryInterface(__uuidof(IDXGIDevice), (void **)&DxgiDevice);
-    if (FAILED(Hr)) return false;
+    HRESULT HResult = MContext->GetDevice()->QueryInterface(__uuidof(IDXGIDevice), (void **)&DxgiDevice);
+    if (FAILED(HResult)) return false;
 
     IDXGIAdapter *Adapter = nullptr;
     DxgiDevice->GetParent(__uuidof(IDXGIAdapter), (void **)&Adapter);
@@ -122,7 +122,7 @@ bool CWindowOverlay::BindToWindow(HWND TargetWindow)
     SwapChainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
     SwapChainDesc.Scaling = DXGI_SCALING_STRETCH;
 
-    Hr = Factory->CreateSwapChainForHwnd(
+    HResult = Factory->CreateSwapChainForHwnd(
         MContext->GetDevice(),
         MOverlayWindow,
         &SwapChainDesc,
@@ -134,10 +134,10 @@ bool CWindowOverlay::BindToWindow(HWND TargetWindow)
     Adapter->Release();
     DxgiDevice->Release();
 
-    if (FAILED(Hr))
+    if (FAILED(HResult))
     {
-        _com_error err(Hr);
-        MessageBox(NULL, err.ErrorMessage(), L"Swap Chain Error", MB_ICONERROR);
+        _com_error ComError(HResult);
+        MessageBox(NULL, ComError.ErrorMessage(), L"Swap Chain Error", MB_ICONERROR);
         return false;
     }
 

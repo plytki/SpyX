@@ -52,25 +52,25 @@ HRESULT OnOverlayWindowMessage(HWND WindowHandle, UINT Message, WPARAM WParamete
 
     switch (Message)
     {
-    case WM_MOUSEACTIVATE:
-        *OutResult = MA_NOACTIVATE;
-        return S_OK;
-
-    case WM_NCHITTEST:
-        if (IsCursorOverImGui())
-        {
-            *OutResult = HTCLIENT;
+        case WM_MOUSEACTIVATE:
+            *OutResult = MA_NOACTIVATE;
             return S_OK;
-        }
-        *OutResult = HTTRANSPARENT;
-        return S_OK;
 
-    case WM_SETCURSOR:
-        if (IsCursorOverImGui())
-        {
-            return S_FALSE;
-        }
-        break;
+        case WM_NCHITTEST:
+            if (g_state)
+            {
+                *OutResult = HTCLIENT;
+                return S_OK;
+            }
+            *OutResult = HTTRANSPARENT;
+            return S_OK;
+
+        case WM_SETCURSOR:
+            if (g_state)
+            {
+                return S_FALSE;
+            }
+            break;
     }
 
     return S_FALSE;
