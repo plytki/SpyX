@@ -14,36 +14,35 @@ CWindowOverlay::~CWindowOverlay()
     if (MRenderTargetView) MRenderTargetView->Release();
     if (MSwapChain) MSwapChain->Release();
     if (MOverlayWindow) DestroyWindow(MOverlayWindow);
-    UnregisterClass(L"TapiOverlayClass", GetModuleHandle(nullptr));
+    UnregisterClass(L"TAPIOverlayClass", GetModuleHandle(nullptr));
 }
 
 LRESULT CALLBACK CWindowOverlay::WindowProcedure(HWND WindowHandle, UINT Message, WPARAM WParameter, LPARAM LParameter)
 {
-    CWindowOverlay *pThis = (CWindowOverlay *)GetWindowLongPtr(WindowHandle, GWLP_USERDATA);
+    CWindowOverlay *Overlay = (CWindowOverlay *) GetWindowLongPtr(WindowHandle, GWLP_USERDATA);
 
     if (Message == WM_NCCREATE)
     {
-        LPCREATESTRUCT pCreate = (LPCREATESTRUCT)LParameter;
-        pThis = (CWindowOverlay *)pCreate->lpCreateParams;
-        SetWindowLongPtr(WindowHandle, GWLP_USERDATA, (LONG_PTR)pThis);
+        LPCREATESTRUCT Create = (LPCREATESTRUCT)LParameter;
+        Overlay = (CWindowOverlay *) Create->lpCreateParams;
+        SetWindowLongPtr(WindowHandle, GWLP_USERDATA, (LONG_PTR)Overlay);
     }
 
-    // 2. Try the user callback (in main.cpp)
-    if (pThis && pThis->MWindowProcedureCallback.IsBound())
+    if (Overlay && Overlay->MWindowProcedureCallback.IsBound())
     {
         LRESULT Result = 0;
-        // If callback returns true, it handled the message -> return its result
-        if (pThis->MWindowProcedureCallback.Execute(WindowHandle, Message, WParameter, LParameter, &Result) == S_OK)
+        if (Overlay->MWindowProcedureCallback.Execute(WindowHandle, Message, WParameter, LParameter, &Result) == S_OK)
         {
             return Result;
         }
     }
 
-    // 3. Default internal handling
     switch (Message)
     {
-    case WM_ERASEBKGND:
-        return 1; // Prevent GDI flickering
+        case WM_ERASEBKGND:
+        {
+            return 1;
+        }
     }
 
     return DefWindowProc(WindowHandle, Message, WParameter, LParameter);
@@ -53,7 +52,6 @@ bool CWindowOverlay::Initialize(CD3D11Context *Context)
 {
     MContext = Context;
 
-    // Blend State - Standardowe alfa
     D3D11_BLEND_DESC BlendDesc = {};
     BlendDesc.RenderTarget[0].BlendEnable = TRUE;
     BlendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
