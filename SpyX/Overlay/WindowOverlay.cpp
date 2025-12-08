@@ -68,15 +68,18 @@ bool CWindowOverlay::Initialize(CD3D11Context *Context)
 bool CWindowOverlay::BindToWindow(HWND TargetWindow)
 {
     MTargetWindow = TargetWindow;
-    if (!IsWindow(MTargetWindow)) return false;
+    if (!IsWindow(MTargetWindow))
+    {
+        return false;
+    }
 
-    WNDCLASSEX Wc = { sizeof(WNDCLASSEX) };
-    Wc.lpfnWndProc = WindowProcedure;
-    Wc.hInstance = GetModuleHandle(nullptr);
-    Wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    Wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
-    Wc.lpszClassName = L"TAPIOverlayClass";
-    RegisterClassEx(&Wc);
+    WNDCLASSEX WindowClass = { sizeof(WNDCLASSEX) };
+    WindowClass.lpfnWndProc = WindowProcedure;
+    WindowClass.hInstance = GetModuleHandle(nullptr);
+    WindowClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    WindowClass.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+    WindowClass.lpszClassName = L"TAPIOverlayClass";
+    RegisterClassEx(&WindowClass);
 
     RECT Rect;
     GetWindowRect(MTargetWindow, &Rect);
@@ -86,14 +89,17 @@ bool CWindowOverlay::BindToWindow(HWND TargetWindow)
     if (Height < 1) Height = 1;
 
     MOverlayWindow = CreateWindowEx(
-        WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_TOOLWINDOW,
+        WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
         L"TapiOverlayClass", L"Overlay",
         WS_POPUP,
         Rect.left, Rect.top, Width, Height,
-        nullptr, nullptr, Wc.hInstance, this
+        nullptr, nullptr, WindowClass.hInstance, this
     );
 
-    if (!MOverlayWindow) return false;
+    if (!MOverlayWindow)
+    {
+        return false;
+    }
 
     SetLayeredWindowAttributes(MOverlayWindow, 0, 0, LWA_COLORKEY);
 
@@ -103,7 +109,10 @@ bool CWindowOverlay::BindToWindow(HWND TargetWindow)
     IDXGIFactory2 *Factory = nullptr;
     IDXGIDevice *DxgiDevice = nullptr;
     HRESULT HResult = MContext->GetDevice()->QueryInterface(__uuidof(IDXGIDevice), (void **)&DxgiDevice);
-    if (FAILED(HResult)) return false;
+    if (FAILED(HResult))
+    {
+        return false;
+    }
 
     IDXGIAdapter *Adapter = nullptr;
     DxgiDevice->GetParent(__uuidof(IDXGIAdapter), (void **)&Adapter);
