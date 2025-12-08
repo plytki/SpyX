@@ -39,7 +39,7 @@ bool IsCursorOverImGui()
 
 bool g_state = 1;
 
-HRESULT OnOverlayWindowMessage(HWND WindowHandle, UINT Message, WPARAM WParameter, LPARAM LParameter, LRESULT *OutResult)
+HRESULT WindowProcedureCallback(HWND WindowHandle, UINT Message, WPARAM WParameter, LPARAM LParameter, LRESULT *OutResult)
 {
     // 1. Give inputs to ImGui first
     if (ImGui_ImplWin32_WndProcHandler(WindowHandle, Message, WParameter, LParameter))
@@ -74,6 +74,31 @@ HRESULT OnOverlayWindowMessage(HWND WindowHandle, UINT Message, WPARAM WParamete
     }
 
     return S_FALSE;
+}
+
+bool VisibilityCallback(HWND TargetWindowHandle, HWND OverlayWindowHandle)
+{
+    HWND ForegroundWindow = GetForegroundWindow();
+
+    if (IsIconic(TargetWindowHandle))
+    {
+        return false;
+    }
+    
+    if (ForegroundWindow == TargetWindowHandle || ForegroundWindow == nullptr)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+        
+
+    if (!IsWindow(TargetWindowHandle))
+        return false;
+
+    return true;
 }
 
 // =============================================================
@@ -219,8 +244,12 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int) {
     g_Overlay.SetRenderCallback(callback);
 
     FWindowProcedureDelegate wndProcCallback;
-    wndProcCallback.BindStatic(OnOverlayWindowMessage);
+    wndProcCallback.BindStatic(WindowProcedureCallback);
     g_Overlay.SetWindowProcedureCallback(wndProcCallback);
+
+    FVisibilityDelegate visCallback;
+    visCallback.BindStatic(VisibilityCallback);
+    g_Overlay.SetVisibilityCallback(visCallback);
 
     // 6. Main Loop
     MSG msg = {};

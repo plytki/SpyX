@@ -175,6 +175,11 @@ void CWindowOverlay::SetWindowProcedureCallback(FWindowProcedureDelegate Callbac
     MWindowProcedureCallback = Callback;
 }
 
+void CWindowOverlay::SetVisibilityCallback(FVisibilityDelegate Callback)
+{
+    MVisibilityCallback = Callback;
+}
+
 void CWindowOverlay::Update()
 {
     UpdatePosition();
@@ -182,19 +187,19 @@ void CWindowOverlay::Update()
 
 void CWindowOverlay::UpdatePosition()
 {
-    if (!IsWindow(MTargetWindow)) return;
-
-    bool bTargetMinimized = IsIconic(MTargetWindow);
-
-    if (bTargetMinimized)
+    if (MVisibilityCallback.IsBound())
     {
-        if (IsWindowVisible(MOverlayWindow))
-            ShowWindow(MOverlayWindow, SW_HIDE);
-        return;
-    }
+        bool ReturnValue = MVisibilityCallback.Execute(MTargetWindow, MOverlayWindow);
 
-    if (!IsWindowVisible(MOverlayWindow))
-        ShowWindow(MOverlayWindow, SW_SHOWNA);
+        if (ReturnValue)
+        {
+            ShowWindow(MOverlayWindow, SW_SHOWNA);
+        }
+        else
+        {
+            ShowWindow(MOverlayWindow, SW_HIDE);
+        }
+    }
 
     RECT Rect;
     GetWindowRect(MTargetWindow, &Rect);
@@ -236,7 +241,7 @@ void CWindowOverlay::Render()
     float ClearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
     MContext->GetContext()->ClearRenderTargetView(MRenderTargetView, ClearColor);
 
-    float BlendFactor[4] = { 0.f, 0.f, 0.f, 0.f };
+    float BlendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     MContext->GetContext()->OMSetBlendState(MBlendState, BlendFactor, 0xffffffff);
     MContext->GetContext()->OMSetRenderTargets(1, &MRenderTargetView, nullptr);
 

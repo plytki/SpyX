@@ -14,6 +14,7 @@ class CD3D11Context;
 
 using FRenderDelegate = TDelegate<void(ID3D11DeviceContext *DeviceContext, ID3D11RenderTargetView *RenderTargetView)>;
 using FWindowProcedureDelegate = TDelegate<HRESULT(HWND WindowHandle, UINT Message, WPARAM WParameter, LPARAM LParameter, LRESULT *OutResult)>;
+using FVisibilityDelegate = TDelegate<bool(HWND TargetWindowHandle, HWND OverlayWindowHandle)>;
 
 class CWindowOverlay
 {
@@ -27,6 +28,7 @@ public:
 
     void SetRenderCallback(FRenderDelegate Callback);
     void SetWindowProcedureCallback(FWindowProcedureDelegate Callback);
+    void SetVisibilityCallback(FVisibilityDelegate Callback);
 
     void Update();
 
@@ -51,6 +53,7 @@ private:
 
     FRenderDelegate MRenderCallback;
     FWindowProcedureDelegate MWindowProcedureCallback;
+    FVisibilityDelegate MVisibilityCallback;
     RECT MLastRect = { 0 };
 };
 
