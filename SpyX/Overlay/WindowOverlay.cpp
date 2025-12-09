@@ -91,7 +91,7 @@ bool CWindowOverlay::BindToWindow(HWND TargetWindow)
     MOverlayWindow = CreateWindowEx(
         WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
         L"TapiOverlayClass", L"Overlay",
-        WS_POPUP,
+        WS_POPUP | WS_VISIBLE,
         Rect.left, Rect.top, Width, Height,
         nullptr, nullptr, WindowClass.hInstance, this
     );
@@ -182,9 +182,25 @@ void CWindowOverlay::SetWindowProcedureCallback(FWindowProcedureDelegate Callbac
     MWindowProcedureCallback = Callback;
 }
 
-void CWindowOverlay::SetVisibilityCallback(FVisibilityDelegate Callback)
+void CWindowOverlay::SetOverlayVisibility(bool NewOverlayVisibility)
 {
-    MVisibilityCallback = Callback;
+    if (NewOverlayVisibility == MOverlayVisibility) return;
+
+    MOverlayVisibility = NewOverlayVisibility;
+
+    if (MOverlayVisibility)
+    {
+        ShowWindow(MOverlayWindow, SW_SHOWNA);
+    }
+    else
+    {
+        ShowWindow(MOverlayWindow, SW_HIDE);
+    }
+}
+
+bool CWindowOverlay::GetOverlayVisibility()
+{
+    return MOverlayVisibility;
 }
 
 void CWindowOverlay::Update()
@@ -194,20 +210,6 @@ void CWindowOverlay::Update()
 
 void CWindowOverlay::UpdatePosition()
 {
-    if (MVisibilityCallback.IsBound())
-    {
-        bool ReturnValue = MVisibilityCallback.Execute(MTargetWindow, MOverlayWindow);
-
-        if (ReturnValue)
-        {
-            ShowWindow(MOverlayWindow, SW_SHOWNA);
-        }
-        else
-        {
-            ShowWindow(MOverlayWindow, SW_HIDE);
-        }
-    }
-
     RECT Rect;
     GetWindowRect(MTargetWindow, &Rect);
 
@@ -257,7 +259,7 @@ void CWindowOverlay::Render()
         MRenderCallback.Execute(MContext->GetContext(), MRenderTargetView);
     }
 
-    MSwapChain->Present(1, 0);
+    MSwapChain->Present(0, 0);
 }
 
 bool CWindowOverlay::IsValid() const

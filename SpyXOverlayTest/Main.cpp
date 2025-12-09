@@ -76,7 +76,7 @@ HRESULT WindowProcedureCallback(HWND WindowHandle, UINT Message, WPARAM WParamet
     return S_FALSE;
 }
 
-bool VisibilityCallback(HWND TargetWindowHandle, HWND OverlayWindowHandle)
+bool CalculateVisibility(HWND TargetWindowHandle)
 {
     HWND ForegroundWindow = GetForegroundWindow();
 
@@ -226,7 +226,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int) {
         MessageBox(NULL, L"Failed to bind overlay", L"Error", MB_ICONERROR);
         return -1;
     }
-
+    
     // 4. Setup ImGui
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -246,11 +246,8 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int) {
     FWindowProcedureDelegate wndProcCallback;
     wndProcCallback.BindStatic(WindowProcedureCallback);
     g_Overlay.SetWindowProcedureCallback(wndProcCallback);
-
-    FVisibilityDelegate visCallback;
-    visCallback.BindStatic(VisibilityCallback);
-    g_Overlay.SetVisibilityCallback(visCallback);
-
+    
+    
     // 6. Main Loop
     MSG msg = {};
     while (g_Overlay.IsValid()) {
@@ -259,6 +256,11 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int) {
             DispatchMessage(&msg);
         }
         else {
+            bool Visibility = CalculateVisibility(targetHwnd);
+            if (g_Overlay.GetOverlayVisibility() != Visibility) {
+                g_Overlay.SetOverlayVisibility(Visibility);
+            }
+            
             g_Overlay.Update();
             g_Overlay.Render();
         }
